@@ -25,10 +25,15 @@ RUN \
 
 FROM spleeter as frontend
 
-WORKDIR /root/frontend
+WORKDIR /root
 ENV NODE_VERSION=16.16.0
 ENV NVM_DIR=/root/.nvm
 ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+
+# Install curl
+RUN \
+    apt-get update && \
+    apt-get install -y --no-install-recommends curl
 
 # Install node
 RUN \
@@ -39,8 +44,9 @@ RUN \
     nvm use default
 
 # Build frontend project
+WORKDIR /root/frontend
+
 COPY frontend /root/frontend
-COPY supervisord.conf /etc/supervisord.conf
 
 RUN \
     . "${NVM_DIR}/nvm.sh" && \
