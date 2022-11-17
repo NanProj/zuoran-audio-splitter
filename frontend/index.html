@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8" />
+    <title>Zuoran Audio Splitter</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        table {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="/socket.io/socket.io.min.js"></script>
+
+<script>
+  "use strict";
+
+  const e = React.createElement;
+  const socket = io();
+
+  function generate_td(item) {
+    return e(
+      "td",
+      null,
+      item
+    )
+  }
+
+  function generate_tr(line) {
+    return e(
+      "tr",
+      null,
+      line.map(generate_td)
+    )
+  }
+
+  function upload() {
+    const files = document.getElementById('original').files;
+    socket.emit("upload", files[0], files[0].name.toString());
+  }
+
+  class Root extends React.Component {
+    constructor(props) {
+      super(props);
+
+      this.state = {data: [], connected: false};
+
+      socket.on("connect", () => {
+        console.log("connected");
+        this.setState({...this.state, connected: true});
+      });
+      socket.on("disconnect", () => {
+        console.log("disconnected");
+        this.setState({...this.state, connected: false});
+      });
+      socket.on("uploaded", (target_path) => {
+        const new_data = [...this.state.data, [target_path, "...", "..."]];
+        this.setState({...this.state, data: new_data});
+      });
+      socket.on("converted", (target_path, mp3_path) => {
+        const new_data = [...this.state.data];
+        for (const i in new_data) {
+          if (new_data[i][0] === target_path) {
+            new_data[i][1] = mp3_path;
+          }
+        }
+        this.setState({...this.state, data: new_data});
+      });
+      socket.on("split", (target_path, output_path) => {
+        const new_data = [...this.state.data];
+        for (const i in new_data) {
+          if (new_data[i][0] === target_path) {
+            new_data[i][2] = output_path;
+          }
+        }
+        this.setState({...this.state, data: new_data});
+      });
+    }
+
+    render() {
+      return e(
+        "div",
+        {
+          disabled: !this.state.connected
+        },
+        e(
+          "input",
+          {
+            type: "file",
+            id: "original",
+            accept: "audio/*, video/*"
+          }
+        ),
+        e(
+          "button",
+          {
+            disabled: !this.state.connected,
+            onClick: upload
+          },
+          "Submit"
+        ),
+        e(
+          "table",
+          null,
+          e(
+            "tr",
+            null,
+            e("th", null, "original"),
+            e("th", null, "convert"),
+            e("th", null, "split"),
+          ),
+          this.state.data.map(generate_tr)
+        )
+      );
+    }
+  }
+
+  const domContainer = document.querySelector("#root");
+  const root = ReactDOM.createRoot(domContainer);
+  root.render(e(Root));
+</script>
+</body>
+</html>
