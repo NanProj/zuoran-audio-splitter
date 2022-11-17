@@ -38,9 +38,9 @@ io.on("connection", async (socket) => {
     await exec(`ffmpeg -i "${target_path}" "${mp3_path}"`);
     socket.emit("converted", rel(target_path), rel(mp3_path));
 
-    const output_dir = path.dirname(target_path);
+    const output_dir = path.join(path.dirname(target_path), "output");
     await exec(`spleeter separate -p spleeter:2stems -o "${output_dir}" "${mp3_path}"`);
-    socket.emit("split", rel(target_path), rel(path.join(update_ext(mp3_path, ""), "vocals.wav")));
+    socket.emit("split", rel(target_path), rel(path.join(output_dir, path.basename(target_path), "vocals.wav")));
   });
 });
 

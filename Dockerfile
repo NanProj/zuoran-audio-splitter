@@ -15,13 +15,6 @@ RUN \
     pip3 install --upgrade pip && \
     pip3 install spleeter
 
-# Download spleeter's models by processing example audio
-RUN \
-    wget https://github.com/deezer/spleeter/raw/master/audio_example.mp3 && \
-    spleeter separate -p spleeter:2stems -o output audio_example.mp3 && \
-    rm audio_example.mp3 && \
-    rm -r output
-
 
 FROM spleeter as frontend
 
@@ -43,14 +36,21 @@ RUN \
     nvm alias default ${NODE_VERSION} && \
     nvm use default
 
-# Build frontend project
+# Copy frontend project
 WORKDIR /root/frontend
-
 COPY frontend /root/frontend
 
+# Install npm dependencies
 RUN \
     . "${NVM_DIR}/nvm.sh" && \
     npm install
+
+# Download spleeter's models by processing example audio
+RUN \
+    wget https://github.com/deezer/spleeter/raw/master/audio_example.mp3 && \
+    spleeter separate -p spleeter:2stems -o output audio_example.mp3 && \
+    rm audio_example.mp3 && \
+    rm -r output
 
 EXPOSE 80
 ENTRYPOINT ["/root/.nvm/versions/node/v16.16.0/bin/node", "/root/frontend/main.js"]
