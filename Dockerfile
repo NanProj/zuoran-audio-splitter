@@ -40,6 +40,10 @@ RUN \
 WORKDIR /root/frontend
 COPY frontend /root/frontend
 
+# Link data folder
+RUN \
+    ln -s /data /root/frontend/data
+
 # Install npm dependencies
 RUN \
     . "${NVM_DIR}/nvm.sh" && \

@@ -44,8 +44,11 @@ io.on("connection", async (socket) => {
   });
 });
 
-app.get('/', function (req, res) {
+app.get("/", function (req, res) {
   res.sendFile("index.html", {root: __dirname});
 });
+
+// Run "ln -s /data /root/frontend/data" in Dockerfile
+app.use("/data", express.static(data_dir));
 
 server.listen("80");

@@ -30,7 +30,7 @@
     return e(
       "td",
       null,
-      item
+      generate_file_download_dom_obj(item)
     )
   }
 
@@ -42,16 +42,22 @@
     )
   }
 
-  function upload() {
-    const files = document.getElementById('original').files;
-    socket.emit("upload", files[0], files[0].name.toString());
+  function generate_file_download_dom_obj(file_path) {
+    return e(
+      "a",
+      {
+        href: `${window.location.origin}/data/${file_path}`,
+        target: "_blank",
+      },
+      file_path
+    )
   }
 
   class Root extends React.Component {
     constructor(props) {
       super(props);
 
-      this.state = {data: [], connected: false};
+      this.state = {data: [], connected: false, uploading: false};
 
       socket.on("connect", () => {
         console.log("connected");
@@ -63,7 +69,7 @@
       });
       socket.on("uploaded", (target_path) => {
         const new_data = [...this.state.data, [target_path, "...", "..."]];
-        this.setState({...this.state, data: new_data});
+        this.setState({...this.state, data: new_data, uploading: false});
       });
       socket.on("converted", (target_path, mp3_path) => {
         const new_data = [...this.state.data];
@@ -85,6 +91,12 @@
       });
     }
 
+    upload = () => {
+      const files = document.getElementById('original').files;
+      socket.emit("upload", files[0], files[0].name.toString());
+      this.setState({...this.state, uploading: true});
+    }
+
     render() {
       return e(
         "div",
@@ -102,8 +114,8 @@
         e(
           "button",
           {
-            disabled: !this.state.connected,
-            onClick: upload
+            disabled: !this.state.connected || this.state.uploading,
+            onClick: this.upload
           },
           "Submit"
         ),
