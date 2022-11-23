@@ -1,0 +1,9 @@
+services:
+
+  zuoran:
+    image: sqybi/zuoran:latest
+    build: .
+    ports:
+      - "80"
+    volumes:
+      - ./data/zuoran:/data
